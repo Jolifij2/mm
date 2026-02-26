@@ -1,0 +1,256 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MathNet.Numerics.LinearProgramming;
+using MathNet.Numerics.Optimization;
+
+namespace Variant4
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("ВАРИАНТ 4");
+            Console.WriteLine(new string('-', 50));
+            
+            SolveInequalitiesPartA_V4();
+            SolveInequalitiesPartB_V4();
+            SolveOptimizationTaskV4();
+            
+            Console.WriteLine("\nНажмите любую клавишу для выхода...");
+            Console.ReadKey();
+        }
+
+        /// <summary>
+        /// Часть 1а: Решение системы неравенств
+        /// x1 + 3x2 ≥ 3
+        /// -2x1 + x2 ≤ 2
+        /// x1 + x2 ≤ 5
+        /// x1 ≥ 0, x2 ≥ 0
+        /// </summary>
+        static void SolveInequalitiesPartA_V4()
+        {
+            Console.WriteLine("\nЧАСТЬ 1А:");
+            
+            // Находим вершины многоугольника решений
+            // Пересечение x1 + 3x2 = 3 и x1 = 0
+            var A = (x1: 0.0, x2: 1.0);
+
+            // Пересечение x1 + 3x2 = 3 и x2 = 0
+            var B = (x1: 3.0, x2: 0.0);
+
+            // Пересечение x1 + x2 = 5 и -2x1 + x2 = 2
+            // Решаем систему:
+            // x1 + x2 = 5
+            // -2x1 + x2 = 2
+            // Вычитаем: 3x1 = 3 => x1 = 1, x2 = 4
+            var D = (x1: 1.0, x2: 4.0);
+
+            var vertices = new[] { A, B, D };
+
+            Console.WriteLine("Вершины многоугольника решений:");
+            Console.WriteLine($"A({vertices[0].x1}, {vertices[0].x2})");
+            Console.WriteLine($"B({vertices[1].x1}, {vertices[1].x2})");
+            Console.WriteLine($"C({vertices[2].x1}, {vertices[2].x2})");
+            
+            Console.WriteLine("\nПримечание: Для визуализации графиков рекомендуется использовать Python с matplotlib");
+            Console.WriteLine("или специализированные библиотеки для .NET (OxyPlot, LiveCharts)");
+        }
+
+        /// <summary>
+        /// Часть 1б: Решение системы неравенств
+        /// x1 - x2 ≤ 3
+        /// 2x1 + x2 ≥ 3
+        /// x1 - 3x2 ≤ 1
+        /// x1 ≥ 0, x2 ≥ 0
+        /// </summary>
+        static void SolveInequalitiesPartB_V4()
+        {
+            Console.WriteLine("\nЧАСТЬ 1Б:");
+            
+            // Находим вершины многоугольника решений
+            // Пересечение 2x1 + x2 = 3 и x1 = 0
+            var A = (x1: 0.0, x2: 3.0);
+
+            // Пересечение 2x1 + x2 = 3 и x1 - 3x2 = 1
+            // Решаем систему:
+            // 2x1 + x2 = 3
+            // x1 - 3x2 = 1
+            // Из второго: x1 = 1 + 3x2
+            // Подставляем в первое: 2(1 + 3x2) + x2 = 3 => 2 + 6x2 + x2 = 3 => 7x2 = 1 => x2 = 1/7 ≈ 0.143, x1 = 1 + 3/7 ≈ 1.429
+            var B = (x1: 1.429, x2: 0.143);
+
+            // Пересечение x1 - 3x2 = 1 и x2 = 0
+            var C = (x1: 1.0, x2: 0.0);
+
+            // Пересечение x1 - x2 = 3 и x1 - 3x2 = 1
+            // Решаем систему:
+            // x1 - x2 = 3
+            // x1 - 3x2 = 1
+            // Вычитаем: 2x2 = 2 => x2 = 1, x1 = 4
+            var D = (x1: 4.0, x2: 1.0);
+
+            var vertices = new[] { A, B, C, D };
+
+            Console.WriteLine("Вершины многоугольника решений:");
+            Console.WriteLine($"A({vertices[0].x1}, {vertices[0].x2})");
+            Console.WriteLine($"B({vertices[1].x1:F2}, {vertices[1].x2:F2})");
+            Console.WriteLine($"C({vertices[2].x1}, {vertices[2].x2})");
+            Console.WriteLine($"D({vertices[3].x1}, {vertices[3].x2})");
+        }
+
+        /// <summary>
+        /// Часть 2: Математическая модель для оптимизационной задачи
+        /// x1 - количество деталей А
+        /// x2 - количество деталей В
+        /// 
+        /// Целевая функция: максимизация прибыли
+        /// Прибыль от детали А: 100 ден. ед.
+        /// Прибыль от детали В: 160 ден. ед.
+        /// 
+        /// Ограничения:
+        /// - Станок 1: 0.2x1 + 0.1x2 ≤ 100
+        /// - Станок 2: 0.2x1 + 0.5x2 ≤ 180
+        /// - Станок 3: 0.1x1 + 0.2x2 ≤ 100
+        /// - Спрос на А: x1 ≥ 300
+        /// - Спрос на В: x2 ≤ 200
+        /// - x1, x2 ≥ 0
+        /// </summary>
+        static void SolveOptimizationTaskV4()
+        {
+            Console.WriteLine("\n" + new string('=', 50));
+            Console.WriteLine("РЕШЕНИЕ ОПТИМИЗАЦИОННОЙ ЗАДАЧИ (Вариант 4)");
+            Console.WriteLine(new string('=', 50));
+
+            // Для решения задачи линейного программирования в C# можно использовать:
+            // 1. Microsoft Solver Foundation
+            // 2. Google OR-Tools
+            // 3. Math.Net Numerics
+            // 4. Решить вручную, найдя пересечения ограничений
+
+            // Так как в стандартной библиотеке C# нет встроенного решателя,
+            // найдем решение аналитически, проверив угловые точки
+
+            Console.WriteLine("Поиск оптимального решения путем анализа угловых точек:");
+
+            // Угловые точки области допустимых решений
+            var cornerPoints = new List<(double x1, double x2)>();
+
+            // Пересечение x1 = 300 и 0.2x1 + 0.1x2 = 100
+            // 0.2*300 + 0.1x2 = 100 => 60 + 0.1x2 = 100 => 0.1x2 = 40 => x2 = 400 (но x2 ≤ 200)
+            // Точка вне ОДР по x2, не рассматриваем
+
+            // Пересечение x1 = 300 и 0.2x1 + 0.5x2 = 180
+            // 0.2*300 + 0.5x2 = 180 => 60 + 0.5x2 = 180 => 0.5x2 = 120 => x2 = 240 (но x2 ≤ 200)
+            // Точка вне ОДР по x2, не рассматриваем
+
+            // Пересечение x1 = 300 и 0.1x1 + 0.2x2 = 100
+            // 0.1*300 + 0.2x2 = 100 => 30 + 0.2x2 = 100 => 0.2x2 = 70 => x2 = 350 (но x2 ≤ 200)
+            // Точка вне ОДР по x2, не рассматриваем
+
+            // Пересечение x2 = 200 и 0.2x1 + 0.1x2 = 100
+            // 0.2x1 + 0.1*200 = 100 => 0.2x1 + 20 = 100 => 0.2x1 = 80 => x1 = 400
+            cornerPoints.Add((400, 200));
+
+            // Пересечение x2 = 200 и 0.2x1 + 0.5x2 = 180
+            // 0.2x1 + 0.5*200 = 180 => 0.2x1 + 100 = 180 => 0.2x1 = 80 => x1 = 400
+            // Та же точка (400, 200)
+
+            // Пересечение x2 = 200 и 0.1x1 + 0.2x2 = 100
+            // 0.1x1 + 0.2*200 = 100 => 0.1x1 + 40 = 100 => 0.1x1 = 60 => x1 = 600
+            cornerPoints.Add((600, 200));
+
+            // Пересечение 0.2x1 + 0.1x2 = 100 и 0.2x1 + 0.5x2 = 180
+            // Вычитаем: 0.4x2 = 80 => x2 = 200
+            // Подставляем: 0.2x1 + 0.1*200 = 100 => 0.2x1 + 20 = 100 => 0.2x1 = 80 => x1 = 400
+            cornerPoints.Add((400, 200)); // Дубликат
+
+            // Пересечение 0.2x1 + 0.1x2 = 100 и 0.1x1 + 0.2x2 = 100
+            // Умножим второе на 2: 0.2x1 + 0.4x2 = 200
+            // Вычитаем первое: 0.3x2 = 100 => x2 = 333.33 (но x2 ≤ 200)
+            // Точка вне ОДР
+
+            // Пересечение 0.2x1 + 0.5x2 = 180 и 0.1x1 + 0.2x2 = 100
+            // Умножим второе на 2: 0.2x1 + 0.4x2 = 200
+            // Вычитаем из первого: 0.1x2 = -20 => x2 = -200 (не подходит)
+
+            // Пересечение x2 = 200 и x1 = 300
+            cornerPoints.Add((300, 200));
+
+            // Пересечение x1 = 300 и x2 = 0 (минимальный спрос на А и минимальное производство В)
+            cornerPoints.Add((300, 0));
+
+            // Пересечение 0.2x1 + 0.5x2 = 180 и x1 = 300
+            // Уже рассматривали - точка (300, 240) вне ОДР по x2
+
+            // Убираем дубликаты и точки вне ОДР
+            var uniquePoints = cornerPoints
+                .Where(p => p.x1 >= 300 && p.x2 >= 0 && p.x2 <= 200)
+                .GroupBy(p => $"{p.x1:F0},{p.x2:F0}")
+                .Select(g => g.First())
+                .ToList();
+
+            // Добавим точку пересечения 0.2x1 + 0.5x2 = 180 и x1 = 300, 
+            // но ограничим x2 = 200 (по спросу)
+            uniquePoints.Add((300, 200)); // Уже есть
+
+            // Проверяем ограничение по станку 3 для точки (300, 200)
+            // 0.1*300 + 0.2*200 = 30 + 40 = 70 ≤ 100 - ок
+
+            // Проверяем все угловые точки
+            var feasiblePoints = new List<(double x1, double x2, double profit)>();
+            
+            foreach (var point in uniquePoints.Distinct())
+            {
+                // Проверяем все ограничения
+                bool feasible = true;
+                
+                // Станок 1
+                if (0.2 * point.x1 + 0.1 * point.x2 > 100 + 1e-6) feasible = false;
+                // Станок 2
+                if (0.2 * point.x1 + 0.5 * point.x2 > 180 + 1e-6) feasible = false;
+                // Станок 3
+                if (0.1 * point.x1 + 0.2 * point.x2 > 100 + 1e-6) feasible = false;
+                // Спрос на А
+                if (point.x1 < 300 - 1e-6) feasible = false;
+                // Спрос на В
+                if (point.x2 > 200 + 1e-6) feasible = false;
+                // Неотрицательность
+                if (point.x2 < 0 - 1e-6) feasible = false;
+                
+                if (feasible)
+                {
+                    double profit = 100 * point.x1 + 160 * point.x2;
+                    feasiblePoints.Add((point.x1, point.x2, profit));
+                }
+            }
+
+            // Находим точку с максимальной прибылью
+            var optimal = feasiblePoints.OrderByDescending(p => p.profit).FirstOrDefault();
+
+            Console.WriteLine($"Оптимальное количество деталей А (x1): {optimal.x1:F0}");
+            Console.WriteLine($"Оптимальное количество деталей В (x2): {optimal.x2:F0}");
+            Console.WriteLine($"Максимальная прибыль: {optimal.profit:F2} ден. ед.");
+
+            // Проверка использования ресурсов
+            double[] resourcesUsed = new double[]
+            {
+                optimal.x1 * 0.2 + optimal.x2 * 0.1,
+                optimal.x1 * 0.2 + optimal.x2 * 0.5,
+                optimal.x1 * 0.1 + optimal.x2 * 0.2
+            };
+            
+            Console.WriteLine("\nИспользование ресурсов:");
+            Console.WriteLine($"Станок 1: {resourcesUsed[0]:F1} / 100 ч");
+            Console.WriteLine($"Станок 2: {resourcesUsed[1]:F1} / 180 ч");
+            Console.WriteLine($"Станок 3: {resourcesUsed[2]:F1} / 100 ч");
+
+            if (Math.Abs(resourcesUsed[0] - 100) < 0.1)
+                Console.WriteLine("  → Станок 1 используется полностью");
+            if (Math.Abs(resourcesUsed[1] - 180) < 0.1)
+                Console.WriteLine("  → Станок 2 используется полностью");
+            if (Math.Abs(resourcesUsed[2] - 100) < 0.1)
+                Console.WriteLine("  → Станок 3 используется полностью");
+        }
+    }
+}
